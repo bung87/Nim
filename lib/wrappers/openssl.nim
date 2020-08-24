@@ -96,8 +96,12 @@ type
   PEVP_MD* = SslPtr
   PBIO_METHOD* = SslPtr
   BIO* = SslPtr
+  BIGNUM* = SslPtr
   EVP_PKEY* = SslPtr
   PRSA* = SslPtr
+  PDSA* = SslPtr
+  PEC_KEY* = SslPtr
+  PDH* = SslPtr
   PASN1_UTCTIME* = SslPtr
   PASN1_cInt* = SslPtr
   PPasswdCb* = SslPtr
@@ -652,12 +656,17 @@ proc ErrRemoveState*(pid: cint){.cdecl, dynlib: DLLUtilName, importc: "ERR_remov
 
 proc PEM_read_bio_RSA_PUBKEY*(bp: BIO, x: ptr PRSA, pw: pem_password_cb, u: pointer): PRSA {.cdecl,
     dynlib: DLLSSLName, importc.}
-
+proc RSA_get0_key*(rsa: PRSA, n,e,d: ptr BIGNUM) {.cdecl,
+    dynlib: DLLSSLName, importc.}
+proc BN_num_bits*(a: BIGNUM): cint {.cdecl,
+    dynlib: DLLSSLName, importc.}
 proc RSA_verify*(kind: cint, origMsg: pointer, origMsgLen: cuint, signature: pointer,
     signatureLen: cuint, rsa: PRSA): cint {.cdecl, dynlib: DLLSSLName, importc.}
 proc PEM_read_RSAPrivateKey*(fp: pointer; x: ptr PRSA; cb: pem_password_cb, u: pointer): PRSA {.cdecl,
     dynlib: DLLSSLName, importc.}
 proc PEM_read_RSAPublicKey*(fp: pointer; x: ptr PRSA; cb: pem_password_cb, u: pointer): PRSA {.cdecl,
+    dynlib: DLLSSLName, importc.}
+proc PEM_read_bio_PUBKEY*(bp: BIO; x: ptr EVP_PKEY; cb: pem_password_cb, u: pointer): EVP_PKEY {.cdecl,
     dynlib: DLLSSLName, importc.}
 proc PEM_read_bio_RSAPublicKey*(bp: BIO, x: ptr PRSA, cb: pem_password_cb, u: pointer): PRSA {.cdecl,
     dynlib: DLLSSLName, importc.}
@@ -695,6 +704,15 @@ proc EVP_MD_size*(md: EVP_MD): cint {.cdecl, importc.}
 
 # hmac functions
 proc HMAC*(evp_md: EVP_MD; key: pointer; key_len: cint; d: cstring; n: csize_t; md: cstring; md_len: ptr cuint): cstring {.cdecl, importc.}
+
+# evp functions
+proc EVP_PKEY_id*(pkey: EVP_PKEY): cint {.cdecl, importc.}
+proc EVP_PKEY_get1_RSA*(pkey: ptr EVP_PKEY): PRSA {.cdecl, importc.}
+proc EVP_PKEY_get1_DSA*(pkey: ptr EVP_PKEY): PDSA {.cdecl, importc.}
+proc EVP_PKEY_get1_EC_KEY*(pkey: ptr EVP_PKEY): PEC_KEY {.cdecl, importc.}
+proc EVP_PKEY_get1_DH*(pkey: ptr EVP_PKEY): PDH {.cdecl, importc.}
+proc EVP_PKEY_get_raw_public_key(pkey: EVP_PKEY, pub: cstring,len: ptr csize_t) :cint {.cdecl, importc.}
+proc EVP_PKEY_get_raw_private_key(pkey: EVP_PKEY, priv: cstring,len: ptr csize_t) :cint {.cdecl, importc.}
 
 # RSA key functions
 proc PEM_read_bio_PrivateKey*(bp: BIO, x: ptr EVP_PKEY, cb: pointer, u: pointer): EVP_PKEY {.cdecl, importc.}
