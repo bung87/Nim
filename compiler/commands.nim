@@ -941,9 +941,10 @@ proc processSwitch*(switch, arg: string, pass: TCmdLinePass, info: TLineInfo;
   of "filenames":
     case arg.normalize
     of "abs": conf.filenameOption = foAbs
+    of "relproject": conf.filenameOption = foRelProject
     of "canonical": conf.filenameOption = foCanonical
     of "legacyrelproj": conf.filenameOption = foLegacyRelProj
-    else: localError(conf, info, "expected: abs|canonical|legacyRelProj, got: $1" % arg)
+    else: localError(conf, info, "expected: abs|relproject|canonical|legacyRelProj, got: $1" % arg)
   of "processing":
     incl(conf.notes, hintProcessing)
     incl(conf.mainPackageNotes, hintProcessing)

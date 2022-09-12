@@ -614,7 +614,7 @@ proc configComplete*(g: ModuleGraph) =
 
 from std/strutils import repeat, `%`
 
-proc onProcessing*(graph: ModuleGraph, fileIdx: FileIndex, moduleStatus: string, fromModule: PSym, ) =
+proc onProcessing*(graph: ModuleGraph, fileIdx: FileIndex, moduleStatus: string, fromModule: PSym ) =
   let conf = graph.config
   let isNimscript = conf.isDefined("nimscript")
   if (not isNimscript) or hintProcessing in conf.cmdlineNotes:

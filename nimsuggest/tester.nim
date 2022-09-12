@@ -32,7 +32,12 @@ proc parseTest(filename: string; epcMode=false): Test =
   result.cmd = nimsug & " --tester " & result.dest
   result.script = @[]
   result.startup = @[]
-  var tmp = open(result.dest, fmWrite)
+  var tmp: File
+  try:
+    tmp = open(result.dest, fmWrite)
+  except IOError as e:
+    stderr.writeLine e.msg
+    quit(osLastError().int)
   var specSection = 0
   var markers = newSeq[string]()
   var i = 1
@@ -58,6 +63,7 @@ proc parseTest(filename: string; epcMode=false): Test =
           result.disabled = false
       elif x.startsWith("$nimsuggest"):
         result.cmd = x % ["nimsuggest", nimsug, "file", filename, "lib", libpath]
+        echo result.cmd
       elif x.startsWith("!"):
         if result.cmd.len == 0:
           result.startup.add x
@@ -256,7 +262,9 @@ proc runEpcTest(filename: string): int =
     s.cmd.replace("--tester", "--epc --log")
   else:
     s.cmd.replace("--tester", "--epc --v2 --log")
+  echo epccmd
   let cl = parseCmdLine(epccmd)
+  echo cl
   var p = startProcess(command=cl[0], args=cl[1 .. ^1],
                        options={poStdErrToStdOut, poUsePath,
                        poInteractive, poDaemon})
@@ -276,7 +284,7 @@ proc runEpcTest(filename: string): int =
       let a = outp.readAll().strip()
     let port = parseInt(a)
     socket.connect("localhost", Port(port))
-
+    echo s.script
     for req, resp in items(s.script):
       if not runCmd(req, s.dest):
         socket.sendEpcStr(req)
@@ -342,6 +350,7 @@ proc main() =
   if os.paramCount() > 0:
     let x = os.paramStr(1)
     let xx = expandFilename x
+    # when not defined(windows):
     failures += runTest(xx)
     failures += runEpcTest(xx)
   else:
