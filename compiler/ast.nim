@@ -1417,20 +1417,25 @@ proc skipTypes*(t: PType, kinds: TTypeKinds): PType =
   result = t
   while result.kind in kinds: result = lastSon(result)
 
+proc intLitTypeToTNodeKind*(tk: TTypeKind): TNodeKind =
+  case tk
+  of tyInt:     result = nkIntLit
+  of tyInt8:    result = nkInt8Lit
+  of tyInt16:   result = nkInt16Lit
+  of tyInt32:   result = nkInt32Lit
+  of tyInt64:   result = nkInt64Lit
+  of tyChar:    result = nkCharLit
+  of tyUInt:    result = nkUIntLit
+  of tyUInt8:   result = nkUInt8Lit
+  of tyUInt16:  result = nkUInt16Lit
+  of tyUInt32:  result = nkUInt32Lit
+  of tyUInt64:  result = nkUInt64Lit
+  else: discard
+
 proc newIntTypeNode*(intVal: BiggestInt, typ: PType): PNode =
   let kind = skipTypes(typ, abstractVarRange).kind
   case kind
-  of tyInt:     result = newNode(nkIntLit)
-  of tyInt8:    result = newNode(nkInt8Lit)
-  of tyInt16:   result = newNode(nkInt16Lit)
-  of tyInt32:   result = newNode(nkInt32Lit)
-  of tyInt64:   result = newNode(nkInt64Lit)
-  of tyChar:    result = newNode(nkCharLit)
-  of tyUInt:    result = newNode(nkUIntLit)
-  of tyUInt8:   result = newNode(nkUInt8Lit)
-  of tyUInt16:  result = newNode(nkUInt16Lit)
-  of tyUInt32:  result = newNode(nkUInt32Lit)
-  of tyUInt64:  result = newNode(nkUInt64Lit)
+  of tyInt..tyInt64, tyUInt..tyUInt64, tyChar: result = newNode(intLitTypeToTNodeKind(kind))
   of tyBool, tyEnum:
     # XXX: does this really need to be the kind nkIntLit?
     result = newNode(nkIntLit)

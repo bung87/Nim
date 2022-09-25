@@ -111,6 +111,8 @@ proc fitNode(c: PContext, formal: PType, arg: PNode; info: TLineInfo): PNode =
       result = fitNodePostMatch(c, formal, result)
 
 proc fitNodeConsiderViewType(c: PContext, formal: PType, arg: PNode; info: TLineInfo): PNode =
+  echo typeToString(formal)
+  echo typeToString(arg.typ)
   let a = fitNode(c, formal, arg, info)
   if formal.kind in {tyVar, tyLent}:
     #classifyViewType(formal) != noView:

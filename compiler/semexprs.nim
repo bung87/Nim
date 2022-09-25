@@ -567,9 +567,11 @@ proc changeType(c: PContext; n: PNode, newType: PType, check: bool) =
       if value < firstOrd(c.config, newType) or value > lastOrd(c.config, newType):
         localError(c.config, n.info, "cannot convert " & $value &
                                          " to " & typeToString(newType))
+    n.kind = intLitTypeToTNodeKind(newType.kind)
   of nkFloatLit..nkFloat64Lit:
     if check and not floatRangeCheck(n.floatVal, newType):
       localError(c.config, n.info, errFloatToString % [$n.floatVal, typeToString(newType)])
+    # n.kind = newFloatTypeNode(n.floatVal, newType).kind
   else: discard
   n.typ = newType
 
@@ -2848,6 +2850,7 @@ proc semExpr(c: PContext, n: PNode, flags: TExprFlags = {}, expectedType: PType 
         result.typ = getSysType(c.graph, n.info, typeKind)
 
   result = n
+  echo "semExpr:",typeToString(expectedType)
   if c.config.cmd == cmdIdeTools: suggestExpr(c, n)
   if nfSem in n.flags: return
   case n.kind
@@ -2914,6 +2917,7 @@ proc semExpr(c: PContext, n: PNode, flags: TExprFlags = {}, expectedType: PType 
         if expected.kind in {tyFloat..tyFloat128}:
           n.transitionIntToFloatKind(nkFloatLit)
         changeType(c, result, expectedType, check=true)
+        echo "semExpr changeType:",typeToString(result.typ),n.intVal
       else:
         setIntLitType(c, result)
   of nkInt8Lit: directLiteral(tyInt8)
