@@ -1,9 +1,14 @@
-discard """
-  action: compile
-"""
-import typetraits
+type Foo*[A; B; C: static[int]] = object
+  s: string
 
-template bar(name: untyped; b1, b2: int8) =
-  let name: array[2, int8] = [b1, b2]
+proc build*[A; B; C: static[int]](s: string;): Foo[A, B, C] =
+    result.s = s
 
-bar(y, 0x11, 0x22)
+proc build*[A; B; C: static[int]](): Foo[A, B, C] =
+    build[A, B, C]("foo")
+
+type
+    Bar = object
+    Baz = object
+let r = build[Bar, Baz, 1]()
+doAssert r.s == "foo"

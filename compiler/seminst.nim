@@ -115,7 +115,9 @@ proc instantiateBody(c: PContext, n, params: PNode, result, orig: PSym) =
     for i in 1..<procParams.len:
       addDecl(c, procParams[i].sym)
     maybeAddResult(c, result, result.ast)
-
+    echo "instantiateBody:",typeToString(result.typ)
+    when defined(useNodeIds):
+      echo n.id
     inc c.inGenericInst
     # add it here, so that recursive generic procs are possible:
     var b = n[bodyPos]

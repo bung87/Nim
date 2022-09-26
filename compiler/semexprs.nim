@@ -84,7 +84,11 @@ proc semExprCheck(c: PContext, n: PNode, flags: TExprFlags, expectedType: PType 
     result = errorNode(c, n)
 
 proc semExprWithType(c: PContext, n: PNode, flags: TExprFlags = {}, expectedType: PType = nil): PNode =
+  if typeToString(expectedType) == "Foo[t6427.Bar, t6427.Baz, 1]":
+    for s in n:
+      echo typeToString(s.typ)
   result = semExprCheck(c, n, flags, expectedType)
+  
   if result.typ == nil and efInTypeof in flags:
     result.typ = c.voidType
   elif result.typ == nil or result.typ == c.enforceVoidContext:
@@ -1210,6 +1214,7 @@ proc readTypeParameter(c: PContext, typ: PType,
 
 proc semSym(c: PContext, n: PNode, sym: PSym, flags: TExprFlags): PNode =
   let s = getGenSym(c, sym)
+  echo "semSym:", $sym, s.kind
   case s.kind
   of skConst:
     if n.kind != nkDotExpr: # dotExpr is already checked by builtinFieldAccess
@@ -1846,6 +1851,8 @@ proc semReturn(c: PContext, n: PNode): PNode =
 
 proc semProcBody(c: PContext, n: PNode; expectedType: PType = nil): PNode =
   openScope(c)
+  echo "semProcBody:", typeToString(expectedType)
+  echo "semProcBody n type:", typeToString(n.typ)
   result = semExpr(c, n, expectedType = expectedType)
   if c.p.resultSym != nil and not isEmptyType(result.typ):
     if result.kind == nkNilLit:
@@ -2850,7 +2857,6 @@ proc semExpr(c: PContext, n: PNode, flags: TExprFlags = {}, expectedType: PType 
         result.typ = getSysType(c.graph, n.info, typeKind)
 
   result = n
-  echo "semExpr:",typeToString(expectedType)
   if c.config.cmd == cmdIdeTools: suggestExpr(c, n)
   if nfSem in n.flags: return
   case n.kind

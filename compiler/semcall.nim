@@ -631,6 +631,7 @@ proc explicitGenericSym(c: PContext, n: PNode, s: PSym): PNode =
     let tm = typeRel(m, formal, arg)
     if tm in {isNone, isConvertible}: return nil
   var newInst = generateInstance(c, s, m.bindings, n.info)
+  echo "explicitGenericSym:", typeToString(newInst.typ)
   newInst.typ.flags.excl tfUnresolved
   let info = getCallLineInfo(n)
   markUsed(c, info, s)

@@ -405,7 +405,7 @@ proc semTypeIdent(c: PContext, n: PNode): PSym =
   if n.kind == nkSym:
     result = getGenSym(c, n.sym)
   else:
-    result = pickSym(c, n, {skType, skGenericParam, skParam})
+    result = pickSym(c, n, {skType, skGenericParam, skParam, skConst})
     if result.isNil:
       result = qualifiedLookUp(c, n, {checkAmbiguity, checkUndeclared})
     if result != nil:
@@ -437,7 +437,7 @@ proc semTypeIdent(c: PContext, n: PNode): PSym =
         else:
           localError(c.config, n.info, errTypeExpected)
           return errorSym(c, n)
-      if result.kind != skType and result.magic notin {mStatic, mType, mTypeOf}:
+      if result.kind notin {skType, skConst} and result.magic notin {mStatic, mType, mTypeOf}:
         # this implements the wanted ``var v: V, x: V`` feature ...
         var ov: TOverloadIter
         var amb = initOverloadIter(ov, c, n)
@@ -448,6 +448,9 @@ proc semTypeIdent(c: PContext, n: PNode): PSym =
           if result.kind != skError: localError(c.config, n.info, errTypeExpected)
           return errorSym(c, n)
       if result.typ.kind != tyGenericParam:
+        if result.kind == skConst:
+          return result
+
         # XXX get rid of this hack!
         var oldInfo = n.info
         when defined(useNodeIds):
