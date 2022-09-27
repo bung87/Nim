@@ -1271,6 +1271,10 @@ proc semSym(c: PContext, n: PNode, sym: PSym, flags: TExprFlags): PNode =
     else:
       result = semTemplateExpr(c, n, s, flags)
   of skParam:
+    if s.typ != nil and s.typ.kind == tyVoid:
+      result = newNode(nkNilLit)
+      result.typ = s.typ
+      return result
     markUsed(c, n.info, s)
     onUse(n.info, s)
     if s.typ != nil and s.typ.kind == tyStatic and s.typ.n != nil:
