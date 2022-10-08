@@ -566,7 +566,10 @@ proc replaceTypeVarsTAux(cl: var TReplTypeVars, t: PType): PType =
         result = n.typ
 
   of tyInt, tyFloat:
-    result = skipIntLit(t, cl.c.idgen)
+    echo typeToString(t)
+    echo t.flags
+    # result = skipIntLit(t, cl.c.idgen)
+    result = copyType(t, nextTypeId(cl.c.idgen), t.owner)
 
   of tyTypeDesc:
     let lookup = cl.typeMap.lookup(t)

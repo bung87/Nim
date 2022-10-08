@@ -327,13 +327,17 @@ proc semArrayIndex(c: PContext, n: PNode): PType =
         localError(c.config, n.info,
           "Array length can't be negative, but was " & $e.intVal)
       result = makeRangeType(c, 0, e.intVal-1, n.info, e.typ)
-    elif e.kind == nkSym and e.typ.kind == tyStatic:
-      if e.sym.ast != nil:
-        return semArrayIndex(c, e.sym.ast)
-      if not isOrdinalType(e.typ.lastSon):
-        let info = if n.safeLen > 1: n[1].info else: n.info
-        localError(c.config, info, errOrdinalTypeExpected % typeToString(e.typ, preferDesc))
-      result = makeRangeWithStaticExpr(c, e)
+    elif e.kind == nkSym :
+      if  e.typ.kind == tyStatic:
+        if e.sym.ast != nil:
+          return semArrayIndex(c, e.sym.ast)
+        if not isOrdinalType(e.typ.lastSon):
+          let info = if n.safeLen > 1: n[1].info else: n.info
+          localError(c.config, info, errOrdinalTypeExpected % typeToString(e.typ, preferDesc))
+        result = makeRangeWithStaticExpr(c, e)
+      else:
+        result = e.typ.skipTypes({tyTypeDesc})
+        result.flags.incl tfInferrableStatic
       if c.inGenericContext > 0: result.flags.incl tfUnresolved
     elif e.kind in (nkCallKinds + {nkBracketExpr}) and hasUnresolvedArgs(c, e):
       if not isOrdinalType(e.typ.skipTypes({tyStatic, tyAlias, tyGenericInst, tySink})):
@@ -375,6 +379,9 @@ proc semArray(c: PContext, n: PNode, prev: PType): PType =
     result = newOrPrevType(tyArray, prev, c)
     # bug #6682: Do not propagate initialization requirements etc for the
     # index type:
+    echo n
+    echo "111:",indx
+    echo "111:",indx.flags
     rawAddSonNoPropagationOfTypeFlags(result, indx)
     addSonSkipIntLit(result, base, c.idgen)
   else:
@@ -1490,20 +1497,24 @@ proc semGeneric(c: PContext, n: PNode, s: PSym, prev: PType): PType =
   var t = s.typ.skipTypes({tyAlias})
   if t.kind == tyCompositeTypeClass and t.base.kind == tyGenericBody:
     t = t.base
-
   result = newOrPrevType(tyGenericInvocation, prev, c)
   addSonSkipIntLit(result, t, c.idgen)
 
-  template addToResult(typ) =
+  template addToResult(typ, skip) =
+    
     if typ.isNil:
       internalAssert c.config, false
       rawAddSon(result, typ)
-    else: addSonSkipIntLit(result, typ, c.idgen)
+    else:
+      if skip:
+        addSonSkipIntLit(result, typ, c.idgen)
+      else:
+        rawAddSon(result, typ)
 
   if t.kind == tyForward:
     for i in 1..<n.len:
       var elem = semGenericParamInInvocation(c, n[i])
-      addToResult(elem)
+      addToResult(elem, true)
     return
   elif t.kind != tyGenericBody:
     # we likely got code of the form TypeA[TypeB] where TypeA is
@@ -1523,7 +1534,7 @@ proc semGeneric(c: PContext, n: PNode, s: PSym, prev: PType): PType =
       return newOrPrevType(tyError, prev, c)
 
     var isConcrete = true
-
+    let isArray = m.call[0].typ.lastSon.kind == tyArray
     for i in 1..<m.call.len:
       var typ = m.call[i].typ
       # is this a 'typedesc' *parameter*? If so, use the typedesc type,
@@ -1531,11 +1542,11 @@ proc semGeneric(c: PContext, n: PNode, s: PSym, prev: PType): PType =
       if m.call[i].kind == nkSym and m.call[i].sym.kind == skParam and
           typ.kind == tyTypeDesc and containsGenericType(typ):
         isConcrete = false
-        addToResult(typ)
+        addToResult(typ, true)
       else:
         typ = typ.skipTypes({tyTypeDesc})
         if containsGenericType(typ): isConcrete = false
-        addToResult(typ)
+        addToResult(typ, if isArray and i == 1:false else: true)
 
     if isConcrete:
       if s.ast == nil and s.typ.kind != tyCompositeTypeClass:

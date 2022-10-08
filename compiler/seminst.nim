@@ -187,8 +187,7 @@ proc instGenericContainer(c: PContext, info: TLineInfo, header: PType,
 
     template paramSym(kind): untyped =
       newSym(kind, genParam.sym.name, nextSymId c.idgen, genericTyp.sym, genParam.sym.info)
-
-    if genParam.kind == tyStatic:
+    if genParam.kind == tyStatic or tfInferrableStatic in genParam.flags:
       param = paramSym skConst
       param.ast = header[i+1].n
       param.typ = header[i+1]
