@@ -379,9 +379,6 @@ proc semArray(c: PContext, n: PNode, prev: PType): PType =
     result = newOrPrevType(tyArray, prev, c)
     # bug #6682: Do not propagate initialization requirements etc for the
     # index type:
-    echo n
-    echo "111:",indx
-    echo "111:",indx.flags
     rawAddSonNoPropagationOfTypeFlags(result, indx)
     addSonSkipIntLit(result, base, c.idgen)
   else:

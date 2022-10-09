@@ -566,10 +566,7 @@ proc replaceTypeVarsTAux(cl: var TReplTypeVars, t: PType): PType =
         result = n.typ
 
   of tyInt, tyFloat:
-    echo typeToString(t)
-    echo t.flags
-    # result = skipIntLit(t, cl.c.idgen)
-    result = copyType(t, nextTypeId(cl.c.idgen), t.owner)
+    result = skipIntLit(t, cl.c.idgen)
 
   of tyTypeDesc:
     let lookup = cl.typeMap.lookup(t)
@@ -623,6 +620,11 @@ proc replaceTypeVarsTAux(cl: var TReplTypeVars, t: PType): PType =
       result.n = replaceTypeVarsN(cl, result.n, ord(result.kind==tyProc))
       case result.kind
       of tyArray:
+        echo "tyArray:", typeToString(t[0])
+        if tfInferrableStatic in t[0].flags:
+          # result[0] = t[0].n.typ
+          echo typeToString(t[0])
+          discard
         let idx = result[0]
         internalAssert cl.c.config, idx.kind != tyStatic
 

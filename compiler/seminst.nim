@@ -201,6 +201,10 @@ proc instGenericContainer(c: PContext, info: TLineInfo, header: PType,
     addDecl(c, param)
 
   result = replaceTypeVarsT(cl, header)
+  if result.kind == tyArray and tfInferrableStatic in header[0].flags:
+    # result[0] = makeRangeType(c, 0, header[0].n.intVal, header[0].n.info)
+    # let intType = getSysType(c.graph,  header[0].n.info, tyInt)
+    result[0] = makeRangeWithStaticExpr(c, header[0].n )
   closeScope(c)
 
 proc referencesAnotherParam(n: PNode, p: PSym): bool =
