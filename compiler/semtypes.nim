@@ -1506,7 +1506,7 @@ proc semGeneric(c: PContext, n: PNode, s: PSym, prev: PType): PType =
       if skip:
         addSonSkipIntLit(result, typ, c.idgen)
       else:
-        rawAddSon(result, typ)
+        rawAddSon(result, makeRangeType(c, 0, typ.n.intVal, typ.n.info))
 
   if t.kind == tyForward:
     for i in 1..<n.len:
@@ -1543,7 +1543,10 @@ proc semGeneric(c: PContext, n: PNode, s: PSym, prev: PType): PType =
       else:
         typ = typ.skipTypes({tyTypeDesc})
         if containsGenericType(typ): isConcrete = false
-        addToResult(typ, if isArray and i == 1:false else: true)
+        var skip = true
+        if isArray and i == 1 and tfInferrableStatic in m.call[0].typ[0].flags:
+          skip = false
+        addToResult(typ, skip)
 
     if isConcrete:
       if s.ast == nil and s.typ.kind != tyCompositeTypeClass:
