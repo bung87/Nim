@@ -30,8 +30,10 @@ type
       # tuple[a: MyInt{int}, b: float]
 
   TTypeRelation* = enum      # order is important!
-    isNone, isConvertible,
-    isIntConv,
+    isNone,
+    isGeneric,
+    isConvertible,
+    isIntConv,               # conversion *from* int, range, float to int
     isSubtype,
     isSubrange,              # subrange of the wanted type; no type conversion
                              # but apart from that counts as ``isSubtype``
@@ -41,7 +43,6 @@ type
                              # the proc's return value
     isInferred,              # generic proc was matched against a concrete type
     isInferredConvertible,   # same as above, but requiring proc CC conversion
-    isGeneric,
     isFromIntLit,            # conversion *from* int literal; proven safe
     isEqual
 

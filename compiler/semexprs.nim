@@ -464,7 +464,7 @@ proc isOpImpl(c: PContext, n: PNode, flags: TExprFlags): PNode =
     if efExplain in flags:
       m.diagnostics = @[]
       m.diagnosticsEnabled = true
-    res = typeRel(m, t2, t1) >= isSubtype # isNone
+    res = typeRel(m, t2, t1) notin {isNone, isConvertible, isIntConv} # isNone
     # `res = sameType(t1, t2)` would be wrong, e.g. for `int is (int|float)`
 
   result = newIntNode(nkIntLit, ord(res))
@@ -2902,7 +2902,7 @@ proc semExpr(c: PContext, n: PNode, flags: TExprFlags = {}, expectedType: PType 
       result.typ = getNilType(c)
       if expectedType != nil:
         var m = newCandidate(c, result.typ)
-        if typeRel(m, expectedType, result.typ) >= isSubtype:
+        if typeRel(m, expectedType, result.typ) notin {isNone, isConvertible, isIntConv}:
           result.typ = expectedType
         # or: result = fitNode(c, expectedType, result, n.info)
   of nkIntLit:
