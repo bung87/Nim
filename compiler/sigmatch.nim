@@ -1591,9 +1591,14 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
       result = isNone
       let oldInheritancePenalty = c.inheritancePenalty
       var maxInheritance = 0
+      const fContainerKinds = {tyOpenArray, tyVarargs}
+      const aContainerKinds = {tyOpenArray, tyVarargs, tyArray, tySequence, tyString}
+      var x: TTypeRelation
       for branch in f.sons:
         c.inheritancePenalty = 0
-        let x = typeRel(c, branch, aOrig, flags)
+        x = typeRel(c, branch, aOrig, flags)
+        if aOrig.kind in aContainerKinds and branch.kind in fContainerKinds and x == isConvertible:
+          x = isGeneric
         maxInheritance = max(maxInheritance, c.inheritancePenalty)
         # 'or' implies maximum matching result:
         if x > result: result = x
