@@ -670,6 +670,7 @@ proc semArrayConstr(c: PContext, n: PNode, flags: TExprFlags; expectedType: PTyp
 proc fixAbstractType(c: PContext, n: PNode) =
   for i in 1..<n.len:
     let it = n[i]
+    if it == nil: continue
     # do not get rid of nkHiddenSubConv for OpenArrays, the codegen needs it:
     if it.kind == nkHiddenSubConv and
         skipTypes(it.typ, abstractVar).kind notin {tyOpenArray, tyVarargs}:
@@ -792,6 +793,7 @@ proc analyseIfAddressTakenInCall(c: PContext, n: PNode) =
     return
   for i in 1..<n.len:
     let n = if n.kind == nkHiddenDeref: n[0] else: n
+    if n[i] == nil: continue
     if n[i].kind == nkHiddenCallConv:
       # we need to recurse explicitly here as converters can create nested
       # calls and then they wouldn't be analysed otherwise
@@ -835,6 +837,7 @@ proc evalAtCompileTime(c: PContext, n: PNode): PNode =
     # implicit statics.
     if n.len > 1:
       for i in 1..<n.len:
+        if n[i] == nil: continue
         # see bug #2113, it's possible that n[i].typ for errornous code:
         if n[i].typ.isNil or n[i].typ.kind != tyStatic or
             tfUnresolved notin n[i].typ.flags:

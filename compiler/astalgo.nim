@@ -119,6 +119,7 @@ proc iiTablePut*(t: var TIITable, key, val: int)
 # implementation
 
 proc skipConvCastAndClosure*(n: PNode): PNode =
+  if n == nil: return
   result = n
   while true:
     case result.kind
