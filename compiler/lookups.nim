@@ -282,6 +282,7 @@ proc ensureNoMissingOrUnusedSymbols(c: PContext; scope: PScope) =
   var missingImpls = 0
   var unusedSyms: seq[tuple[sym: PSym, key: string]]
   while s != nil:
+    let topLevelInWhen = scope.depthLevel <= 2 and c.inWhenContext > 0
     if sfForward in s.flags and s.kind notin {skType, skModule}:
       # too many 'implementation of X' errors are annoying
       # and slow 'suggest' down:
@@ -289,16 +290,13 @@ proc ensureNoMissingOrUnusedSymbols(c: PContext; scope: PScope) =
         localError(c.config, s.info, "implementation of '$1' expected" %
             getSymRepr(c.config, s, getDeclarationPath=false))
       inc missingImpls
-    elif {sfUsed, sfExported} * s.flags == {}:
+    elif {sfUsed, sfExported} * s.flags == {} and not topLevelInWhen:
       if s.kind notin {skForVar, skParam, skMethod, skUnknown, skGenericParam, skEnumField}:
         # XXX: implicit type params are currently skTypes
         # maybe they can be made skGenericParam as well.
         if s.typ != nil and tfImplicitTypeParam notin s.typ.flags and
            s.typ.kind != tyGenericParam:
-          let topLevelConstInWhen = scope.depthLevel <= 2 and c.inWhenContext > 0 and
-              s.kind == skConst
-          if not topLevelConstInWhen:
-            unusedSyms.add (s, toFileLineCol(c.config, s.info))
+          unusedSyms.add (s, toFileLineCol(c.config, s.info))
     s = nextIter(it, scope.symbols)
   for (s, _) in sortedByIt(unusedSyms, it.key):
     message(c.config, s.info, hintXDeclaredButNotUsed, s.name.s)
