@@ -295,7 +295,10 @@ proc ensureNoMissingOrUnusedSymbols(c: PContext; scope: PScope) =
         # maybe they can be made skGenericParam as well.
         if s.typ != nil and tfImplicitTypeParam notin s.typ.flags and
            s.typ.kind != tyGenericParam:
-          unusedSyms.add (s, toFileLineCol(c.config, s.info))
+          let topLevelConstInWhen = scope.depthLevel <= 2 and c.inWhenContext > 0 and
+              s.kind == skConst
+          if not topLevelConstInWhen:
+            unusedSyms.add (s, toFileLineCol(c.config, s.info))
     s = nextIter(it, scope.symbols)
   for (s, _) in sortedByIt(unusedSyms, it.key):
     message(c.config, s.info, hintXDeclaredButNotUsed, s.name.s)

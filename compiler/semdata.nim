@@ -164,6 +164,7 @@ type
     lastTLineInfo*: TLineInfo
     sideEffects*: Table[int, seq[(TLineInfo, PSym)]] # symbol.id index
     inUncheckedAssignSection*: int
+    inWhenContext*: int
 
 template config*(c: PContext): ConfigRef = c.graph.config
 

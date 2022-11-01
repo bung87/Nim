@@ -2416,6 +2416,7 @@ proc semMagic(c: PContext, n: PNode, s: PSym, flags: TExprFlags; expectedType: P
 proc semWhen(c: PContext, n: PNode, semCheck = true): PNode =
   # If semCheck is set to false, ``when`` will return the verbatim AST of
   # the correct branch. Otherwise the AST will be passed through semStmt.
+  inc c.inWhenContext
   result = nil
 
   template setResult(e: untyped) =
@@ -2472,6 +2473,7 @@ proc semWhen(c: PContext, n: PNode, semCheck = true): PNode =
     result.typ = typ
     if n.len == 1:
       result.add(newTree(nkElse, newNode(nkStmtList)))
+  dec c.inWhenContext
 
 proc semSetConstr(c: PContext, n: PNode, expectedType: PType = nil): PNode =
   result = newNodeI(nkCurly, n.info)
