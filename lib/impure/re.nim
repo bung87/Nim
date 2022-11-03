@@ -524,21 +524,27 @@ proc multiReplace*(s: string, subs: openArray[
                    tuple[pattern: Regex, repl: string]]): string =
   ## Returns a modified copy of `s` with the substitutions in `subs`
   ## applied in parallel.
-  result = ""
+  let sLen = s.len
+  result = newStringOfCap(sLen)
   var i = 0
   var caps: array[MaxSubpatterns, string]
-  while i < s.len:
-    block searchSubs:
-      for j in 0..high(subs):
-        var x = matchLen(s, subs[j][0], caps, i)
+  var s = cstring(s)
+  let h = high(subs)
+  var x: int
+  let subs = subs
+  block outter:
+    while i < sLen:
+      for j in 0..h:
+        x = matchLen(s, subs[j][0], caps, i, sLen)
         if x > 0:
           addf(result, subs[j][1], caps)
           inc(i, x)
-          break searchSubs
+          break outter
       add(result, s[i])
       inc(i)
   # copy the rest:
-  add(result, substr(s, i))
+  # add(result, substr(s, i, sLen - 1))
+  add(result, s[i ..< sLen])
 
 proc transformFile*(infile, outfile: string,
                     subs: openArray[tuple[pattern: Regex, repl: string]]) =

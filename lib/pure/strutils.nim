@@ -2225,26 +2225,33 @@ func multiReplace*(s: string, replacements: varargs[(string, string)]): string =
   ##
   ## The order of the replacements does matter. Earlier replacements are
   ## preferred over later replacements in the argument list.
-  result = newStringOfCap(s.len)
+  let sLen = s.len
+  var s = s
+  result = newStringOfCap(sLen)
   var i = 0
   var fastChk: set[char] = {}
-  for sub, by in replacements.items:
+  let replacements = @replacements
+  var lens = newSeq[int](replacements.len)
+  for j, (sub, by) in replacements:
+    lens[j] = sub.len
     if sub.len > 0:
       # Include first character of all replacements
       fastChk.incl sub[0]
-  while i < s.len:
-    block sIteration:
-      # Assume most chars in s are not candidates for any replacement operation
-      if s[i] in fastChk:
-        for sub, by in replacements.items:
-          if sub.len > 0 and s.continuesWith(sub, i):
-            add result, by
-            inc(i, sub.len)
-            break sIteration
-      # No matching replacement found
-      # copy current character from s
-      add result, s[i]
-      inc(i)
+  
+  block outter:
+    while i < sLen:
+      block sIteration:
+          # Assume most chars in s are not candidates for any replacement operation
+        if s[i] in fastChk:
+          for j, (sub, by) in replacements:
+            if lens[j] > 0 and s.continuesWith(sub, i):
+              add result, by
+              inc(i, lens[j])
+              break sIteration
+        # No matching replacement found
+        # copy current character from s
+        add result, s[i]
+        inc(i)
 
 
 
