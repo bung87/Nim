@@ -153,7 +153,7 @@ template gcAssert(cond: bool, msg: string) =
   when defined(useGcAssert):
     if not cond:
       cstderr.rawWrite "[GCASSERT] "
-      cstderr.rawWrite msg
+      cstderr.rawWrite msg & "\L"
       when defined(logGC):
         cstderr.rawWrite "[GCASSERT] statistics:\L"
         cstderr.rawWrite GC_getStatistics()
@@ -649,7 +649,7 @@ proc doOperation(p: pointer, op: WalkOp) =
     #if not isAllocatedPtr(gch.region, c):
     #  c_printf("[GC] decref bug: %p", c)
     gcAssert(isAllocatedPtr(gch.region, c), "decRef: waZctDecRef")
-    gcAssert(c.refcount >=% rcIncrement, "doOperation 2")
+    gcAssert(c.refcount >=% rcIncrement, "doOperation 2, refcount:" & $c.refcount & " rcIncrement: " & $rcIncrement)
     logCell("decref (from doOperation)", c)
     track("waZctDecref", p, 0)
     decRef(c)
