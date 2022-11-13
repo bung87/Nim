@@ -373,7 +373,7 @@ proc concreteType(c: TCandidate, t: PType; f: PType = nil): PType =
   else:
     result = t                # Note: empty is valid here
 
-proc handleRange(f, a: PType, min, max: TTypeKind): TTypeRelation =
+proc handleRange(c: PContext, f, a: PType, min, max: TTypeKind): TTypeRelation =
   if a.kind == f.kind:
     result = isEqual
   else:
@@ -389,9 +389,9 @@ proc handleRange(f, a: PType, min, max: TTypeKind): TTypeRelation =
       # integer literal in the proper range; we want ``i16 + 4`` to stay an
       # ``int16`` operation so we declare the ``4`` pseudo-equal to int16
       result = isFromIntLit
-    elif f.kind == tyInt and k in {tyInt8..tyInt32}:
+    elif f.kind == tyInt and k in {tyInt8 .. c.config.targetSizeSignedMaxToKind}:
       result = isIntConv
-    elif f.kind == tyUInt and k in {tyUInt8..tyUInt32}:
+    elif f.kind == tyUInt and k in {tyUInt8 .. c.config.targetSizeUnsignedMaxToKind}:
       result = isIntConv
     elif k >= min and k <= max:
       result = isConvertible
@@ -1150,16 +1150,16 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
         result = isIntConv
       elif isConvertibleToRange(f, a):
         result = isConvertible  # a convertible to f
-  of tyInt:      result = handleRange(f, a, tyInt8, tyInt32)
-  of tyInt8:     result = handleRange(f, a, tyInt8, tyInt8)
-  of tyInt16:    result = handleRange(f, a, tyInt8, tyInt16)
-  of tyInt32:    result = handleRange(f, a, tyInt8, tyInt32)
-  of tyInt64:    result = handleRange(f, a, tyInt, tyInt64)
-  of tyUInt:     result = handleRange(f, a, tyUInt8, tyUInt32)
-  of tyUInt8:    result = handleRange(f, a, tyUInt8, tyUInt8)
-  of tyUInt16:   result = handleRange(f, a, tyUInt8, tyUInt16)
-  of tyUInt32:   result = handleRange(f, a, tyUInt8, tyUInt32)
-  of tyUInt64:   result = handleRange(f, a, tyUInt, tyUInt64)
+  of tyInt:      result = handleRange(c.c, f, a, tyInt8, c.c.config.targetSizeSignedMaxToKind)
+  of tyInt8:     result = handleRange(c.c, f, a, tyInt8, tyInt8)
+  of tyInt16:    result = handleRange(c.c, f, a, tyInt8, tyInt16)
+  of tyInt32:    result = handleRange(c.c, f, a, tyInt8, tyInt32)
+  of tyInt64:    result = handleRange(c.c, f, a, tyInt, tyInt64)
+  of tyUInt:     result = handleRange(c.c, f, a, tyUInt8, tyUInt32)
+  of tyUInt8:    result = handleRange(c.c, f, a, tyUInt8, tyUInt8)
+  of tyUInt16:   result = handleRange(c.c, f, a, tyUInt8, tyUInt16)
+  of tyUInt32:   result = handleRange(c.c, f, a, tyUInt8, tyUInt32)
+  of tyUInt64:   result = handleRange(c.c, f, a, tyUInt, tyUInt64)
   of tyFloat:    result = handleFloatRange(f, a)
   of tyFloat32:  result = handleFloatRange(f, a)
   of tyFloat64:  result = handleFloatRange(f, a)
