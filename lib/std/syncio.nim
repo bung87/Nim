@@ -821,7 +821,7 @@ when defined(windows) and appType == "console" and
   proc getConsoleCP(): cuint {.stdcall, dynlib: "kernel32",
     importc: "GetConsoleCP".}
 
-  const Utf8codepage = 65001
+  const Utf8codepage = 65001'u32
 
   let
     consoleOutputCP = getConsoleOutputCP()

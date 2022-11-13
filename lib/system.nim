@@ -2305,11 +2305,13 @@ else:
       type ExitCodeRange = int8
     else: # win32 uses low 32 bits
       type ExitCodeRange = cint
-
-    if errorcode < low(ExitCodeRange):
-      rawQuit(low(ExitCodeRange).cint)
-    elif errorcode > high(ExitCodeRange):
-      rawQuit(high(ExitCodeRange).cint)
+    when sizeof(errorcode) > sizeof(ExitCodeRange):
+      if errorcode < low(ExitCodeRange):
+        rawQuit(low(ExitCodeRange).cint)
+      elif errorcode > high(ExitCodeRange):
+        rawQuit(high(ExitCodeRange).cint)
+      else:
+        rawQuit(errorcode.cint)
     else:
       rawQuit(errorcode.cint)
 
