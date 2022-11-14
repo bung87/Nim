@@ -31,7 +31,7 @@ const
   RealFli = MaxFli - FliOffset
 
   # size of chunks in last matrix bin
-  MaxBigChunkSize = 1'i32 shl MaxFli - 1'i32 shl (MaxFli-MaxLog2Sli-1)
+  MaxBigChunkSize = int(1'i32 shl MaxFli - 1'i32 shl (MaxFli-MaxLog2Sli-1))
   HugeChunkSize = MaxBigChunkSize + 1
 
 type
@@ -195,7 +195,7 @@ proc mappingSearch(r, fl, sl: var int) {.inline.} =
   let t = roundup((1 shl (msbit(uint32 r) - MaxLog2Sli)), PageSize) - 1
   r = r + t
   r = r and not t
-  r = min(r, MaxBigChunkSize)
+  r = min(r, MaxBigChunkSize).int
   fl = msbit(uint32 r)
   sl = (r shr (fl - MaxLog2Sli)) - MaxSli
   dec fl, FliOffset
@@ -471,7 +471,7 @@ proc requestOsChunks(a: var MemRegion, size: int): PBigChunk =
         a.nextChunkSize = PageSize*4
       else:
         a.nextChunkSize = min(roundup(usedMem shr 2, PageSize), a.nextChunkSize * 2)
-        a.nextChunkSize = min(a.nextChunkSize, MaxBigChunkSize)
+        a.nextChunkSize = min(a.nextChunkSize, MaxBigChunkSize).int
 
   var size = size
   if size > a.nextChunkSize:

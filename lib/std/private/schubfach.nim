@@ -244,7 +244,7 @@ proc toDecimal32(ieeeSignificand: uint32; ieeeExponent: uint32): FloatingDecimal
 ##  ToChars
 ## ==================================================================================================
 
-proc printDecimalDigitsBackwards(buf: var openArray[char]; pos: int; output: uint32): int32 {.inline.} =
+proc printDecimalDigitsBackwards[T: Ordinal](buf: var openArray[char]; pos: T; output: uint32): int32 {.inline.} =
   var output = output
   var pos = pos
   var tz: int32 = 0
@@ -321,12 +321,12 @@ proc decimalLength(v: uint32): int32 {.inline.} =
     return 2
   return 1
 
-proc formatDigits(buffer: var openArray[char]; pos: int; digits: uint32; decimalExponent: int32;
-                  forceTrailingDotZero: bool = false): int {.inline.} =
+proc formatDigits[T: Ordinal](buffer: var openArray[char]; pos: T; digits: uint32; decimalExponent: int32;
+                  forceTrailingDotZero: bool = false): int32 {.inline.} =
   const
     minFixedDecimalPoint: int32 = -4
     maxFixedDecimalPoint: int32 = 9
-  var pos = pos
+  var pos:int32 = pos.int32
   assert(minFixedDecimalPoint <= -1, "internal error")
   assert(maxFixedDecimalPoint >= 1, "internal error")
   sf_Assert(digits >= 1)
@@ -400,11 +400,11 @@ proc formatDigits(buffer: var openArray[char]; pos: int; digits: uint32; decimal
       inc(pos, 2)
   return pos
 
-proc float32ToChars*(buffer: var openArray[char]; v: float32; forceTrailingDotZero = false): int {.
+proc float32ToChars*(buffer: var openArray[char]; v: float32; forceTrailingDotZero = false): int32 {.
     inline.} =
   let significand: uint32 = physicalSignificand(constructSingle(v))
   let exponent: uint32 = physicalExponent(constructSingle(v))
-  var pos = 0
+  var pos:int32 = 0
   if exponent != maxIeeeExponent:
     ##  Finite
     buffer[pos] = '-'

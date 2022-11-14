@@ -28,7 +28,7 @@ const
 #       res.add $i
 #   doAssert res == digits100
 
-proc utoa2Digits*(buf: var openArray[char]; pos: int; digits: uint32) {.inline.} =
+proc utoa2Digits*[T: Ordinal](buf: var openArray[char]; pos: T; digits: uint32) {.inline.} =
   buf[pos] = digits100[2 * digits]
   buf[pos+1] = digits100[2 * digits + 1]
   #copyMem(buf, unsafeAddr(digits100[2 * digits]), 2 * sizeof((char)))

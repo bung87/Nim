@@ -802,14 +802,14 @@ proc firstFloat*(t: PType): BiggestFloat =
     internalError(newPartialConfigRef(), "invalid kind for firstFloat(" & $t.kind & ')')
     NaN
 
-proc targetSizeSignedMaxToKind*(conf: ConfigRef): TTypeKind =
+proc targetSizeSignedToKind*(conf: ConfigRef): TTypeKind =
   case conf.target.intSize
   of 8: result = tyInt64
   of 4: result = tyInt32
-  of 2: result = tyInt32
+  of 2: result = tyInt16
   else: discard
 
-proc targetSizeUnsignedMaxToKind*(conf: ConfigRef): TTypeKind =
+proc targetSizeUnsignedToKind*(conf: ConfigRef): TTypeKind =
   case conf.target.intSize
   of 8: result = tyUInt64
   of 4: result = tyUInt32

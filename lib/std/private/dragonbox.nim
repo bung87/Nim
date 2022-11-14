@@ -1186,13 +1186,13 @@ proc decimalLength*(v: uint64): int32 {.inline.} =
     return 2
   return 1
 
-proc formatDigits*(buffer: var openArray[char]; pos: int; digits: uint64; decimalExponent: int32;
+proc formatDigits*[T: Ordinal](buffer: var openArray[char]; pos: T; digits: uint64; decimalExponent: int32;
                   forceTrailingDotZero = false): int {.inline.} =
   const
     minFixedDecimalPoint: int32 = -6
   const
     maxFixedDecimalPoint: int32 = 17
-  var pos = pos
+  var pos:int = pos.int
   assert(minFixedDecimalPoint <= -1, "internal error")
   assert(maxFixedDecimalPoint >= 17, "internal error")
   dragonbox_Assert(digits >= 1)
@@ -1219,7 +1219,7 @@ proc formatDigits*(buffer: var openArray[char]; pos: int; digits: uint64; decima
   else:
     ##  dE+123 or d.igitsE+123
     decimalDigitsPosition = 1
-  var digitsEnd = pos + int(decimalDigitsPosition + numDigits)
+  var digitsEnd:int = pos + int(decimalDigitsPosition + numDigits)
   let tz: int32 = printDecimalDigitsBackwards(buffer, digitsEnd, digits)
   dec(digitsEnd, tz)
   dec(numDigits, tz)

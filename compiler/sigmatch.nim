@@ -389,9 +389,9 @@ proc handleRange(c: PContext, f, a: PType, min, max: TTypeKind): TTypeRelation =
       # integer literal in the proper range; we want ``i16 + 4`` to stay an
       # ``int16`` operation so we declare the ``4`` pseudo-equal to int16
       result = isFromIntLit
-    elif f.kind == tyInt and k in {tyInt8 .. c.config.targetSizeSignedMaxToKind}:
+    elif f.kind == tyInt and k in {tyInt8 .. c.config.targetSizeSignedToKind}:
       result = isIntConv
-    elif f.kind == tyUInt and k in {tyUInt8 .. c.config.targetSizeUnsignedMaxToKind}:
+    elif f.kind == tyUInt and k in {tyUInt8 .. c.config.targetSizeUnsignedToKind}:
       result = isIntConv
     elif k >= min and k <= max:
       result = isConvertible
@@ -1150,12 +1150,12 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
         result = isIntConv
       elif isConvertibleToRange(f, a):
         result = isConvertible  # a convertible to f
-  of tyInt:      result = handleRange(c.c, f, a, tyInt8, c.c.config.targetSizeSignedMaxToKind)
+  of tyInt:      result = handleRange(c.c, f, a, tyInt8, c.c.config.targetSizeSignedToKind)
   of tyInt8:     result = handleRange(c.c, f, a, tyInt8, tyInt8)
   of tyInt16:    result = handleRange(c.c, f, a, tyInt8, tyInt16)
   of tyInt32:    result = handleRange(c.c, f, a, tyInt8, tyInt32)
   of tyInt64:    result = handleRange(c.c, f, a, tyInt, tyInt64)
-  of tyUInt:     result = handleRange(c.c, f, a, tyUInt8, tyUInt32)
+  of tyUInt:     result = handleRange(c.c, f, a, tyUInt8, c.c.config.targetSizeUnsignedToKind)
   of tyUInt8:    result = handleRange(c.c, f, a, tyUInt8, tyUInt8)
   of tyUInt16:   result = handleRange(c.c, f, a, tyUInt8, tyUInt16)
   of tyUInt32:   result = handleRange(c.c, f, a, tyUInt8, tyUInt32)
