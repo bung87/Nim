@@ -23,7 +23,7 @@ template track(op, address, size) =
 const
   nimMinHeapPages {.intdefine.} = 128 # 0.5 MB
   SmallChunkSize = PageSize
-  MaxFli = 30
+  MaxFli = when sizeof(int) > 2: 30 else: 14
   MaxLog2Sli = 5 # 32, this cannot be increased without changing 'uint32'
                  # everywhere!
   MaxSli = 1 shl MaxLog2Sli
@@ -31,7 +31,7 @@ const
   RealFli = MaxFli - FliOffset
 
   # size of chunks in last matrix bin
-  MaxBigChunkSize = 1 shl MaxFli - 1 shl (MaxFli-MaxLog2Sli-1)
+  MaxBigChunkSize = 1'i32 shl MaxFli - 1'i32 shl (MaxFli-MaxLog2Sli-1)
   HugeChunkSize = MaxBigChunkSize + 1
 
 type
@@ -114,7 +114,7 @@ type
   MemRegion = object
     when not defined(gcDestructors):
       minLargeObj, maxLargeObj: int
-    freeSmallChunks: array[0..SmallChunkSize div MemAlign-1, PSmallChunk]
+    freeSmallChunks: array[0..max(1,SmallChunkSize div MemAlign-1), PSmallChunk]
     flBitmap: uint32
     slBitmap: array[RealFli, uint32]
     matrix: array[RealFli, array[MaxSli, PBigChunk]]

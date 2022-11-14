@@ -193,7 +193,7 @@ elif defined(windows) and not defined(StandaloneHeapSize):
     #VirtualFree(p, size, MEM_DECOMMIT)
 
 elif hostOS == "standalone" or defined(StandaloneHeapSize):
-  const StandaloneHeapSize {.intdefine.}: int = 64 * sizeof(int) * PageSize - 1
+  const StandaloneHeapSize {.intdefine.}: int = 1024 * PageSize
   var
     theHeap: array[StandaloneHeapSize div sizeof(float64), float64] # 'float64' for alignment
     bumpPointer = cast[int](addr theHeap)
