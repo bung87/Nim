@@ -391,13 +391,13 @@ proc handleRange(c: PContext, f, a: PType, min, max: TTypeKind): TTypeRelation =
       # integer literal in the proper range; we want ``i16 + 4`` to stay an
       # ``int16`` operation so we declare the ``4`` pseudo-equal to int16
       result = isFromIntLit
-    elif f.kind == tyInt and k in {tyInt8 .. c.config.targetSizeSignedToKind}:
+    elif a.kind == tyInt and nf == c.config.targetSizeSignedToKind:
       result = isIntConv
-    elif f.kind == tyUInt and k in {tyUInt8 .. c.config.targetSizeUnsignedToKind}:
+    elif a.kind == tyUInt and nf == c.config.targetSizeUnsignedToKind:
       result = isIntConv
-    elif f.kind in {tyInt8..tyInt64} and k in {tyInt..tyInt64} and ord(na) <= ord(nf):
+    elif f.kind == tyInt and na in {tyInt8 .. c.config.targetSizeSignedToKind}:
       result = isIntConv
-    elif f.kind in {tyUInt8..tyUInt64} and k in {tyUInt..tyUInt64} and ord(na) <= ord(nf):
+    elif f.kind == tyUInt and na in {tyUInt8 .. c.config.targetSizeUnsignedToKind}:
       result = isIntConv
     elif k >= min and k <= max:
       result = isConvertible
@@ -2119,6 +2119,8 @@ proc paramTypesMatchAux(m: var TCandidate, f, a: PType,
   of isIntConv:
     # I'm too lazy to introduce another ``*matches`` field, so we conflate
     # ``isIntConv`` and ``isIntLit`` here:
+    if f.skipTypes({tyRange}).kind notin {tyInt, tyUInt}:
+      inc(m.intConvMatches)
     inc(m.intConvMatches)
     result = implicitConv(nkHiddenStdConv, f, arg, m, c)
   of isSubtype:

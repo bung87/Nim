@@ -573,7 +573,7 @@ proc readAllFile(file: File, len: int64): string =
   result = newString(len)
   let bytes = readBuffer(file, addr(result[0]), len)
   if endOfFile(file):
-    if bytes < len:
+    if bytes.int64 < len:
       result.setLen(bytes)
   else:
     # We read all the bytes but did not reach the EOF

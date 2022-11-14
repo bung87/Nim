@@ -1166,23 +1166,23 @@ proc decimalLength*(v: uint64): int32 {.inline.} =
       return 11
     return 10
   let v32: uint32 = cast[uint32](v)
-  if v32 >= 1000000000'u:
+  if v32 >= 1000000000'u32:
     return 10
-  if v32 >= 100000000'u:
+  if v32 >= 100000000'u32:
     return 9
-  if v32 >= 10000000'u:
+  if v32 >= 10000000'u32:
     return 8
-  if v32 >= 1000000'u:
+  if v32 >= 1000000'u32:
     return 7
-  if v32 >= 100000'u:
+  if v32 >= 100000'u32:
     return 6
-  if v32 >= 10000'u:
+  if v32 >= 10000'u32:
     return 5
-  if v32 >= 1000'u:
+  if v32 >= 1000'u32:
     return 4
-  if v32 >= 100'u:
+  if v32 >= 100'u32:
     return 3
-  if v32 >= 10'u:
+  if v32 >= 10'u32:
     return 2
   return 1
 
