@@ -717,7 +717,7 @@ proc open*(f: var File, filename: string,
 
     result = true
     f = cast[File](p)
-    if bufSize > 0 and bufSize <= high(cint).int:
+    if bufSize > 0 and bufSize.uint <= high(uint):
       discard c_setvbuf(f, nil, IOFBF, cast[csize_t](bufSize))
     elif bufSize == 0:
       discard c_setvbuf(f, nil, IONBF, 0)
