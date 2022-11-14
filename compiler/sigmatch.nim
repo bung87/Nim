@@ -379,8 +379,10 @@ proc handleRange(c: PContext, f, a: PType, min, max: TTypeKind): TTypeRelation =
   else:
     let ab = skipTypes(a, {tyRange})
     let k = ab.kind
+    let nf = c.config.normalizeKind(f.kind)
+    let na = c.config.normalizeKind(k)
     if k == f.kind: result = isSubrange
-    elif k == tyInt and f.kind in {tyRange, tyInt8..tyInt64,
+    elif k == tyInt and f.kind in {tyRange, tyInt..tyInt64,
                                    tyUInt..tyUInt64} and
         isIntLit(ab) and getInt(ab.n) >= firstOrd(nil, f) and
                          getInt(ab.n) <= lastOrd(nil, f):
@@ -392,6 +394,10 @@ proc handleRange(c: PContext, f, a: PType, min, max: TTypeKind): TTypeRelation =
     elif f.kind == tyInt and k in {tyInt8 .. c.config.targetSizeSignedToKind}:
       result = isIntConv
     elif f.kind == tyUInt and k in {tyUInt8 .. c.config.targetSizeUnsignedToKind}:
+      result = isIntConv
+    elif f.kind in {tyInt8..tyInt64} and k in {tyInt..tyInt64} and ord(na) <= ord(nf):
+      result = isIntConv
+    elif f.kind in {tyUInt8..tyUInt64} and k in {tyUInt..tyUInt64} and ord(na) <= ord(nf):
       result = isIntConv
     elif k >= min and k <= max:
       result = isConvertible
@@ -405,7 +411,7 @@ proc handleRange(c: PContext, f, a: PType, min, max: TTypeKind): TTypeRelation =
       result = isConvertible
     else: result = isNone
 
-proc isConvertibleToRange(f, a: PType): bool =
+proc isConvertibleToRange(c: PContext, f, a: PType): bool =
   if f.kind in {tyInt..tyInt64, tyUInt..tyUInt64} and
      a.kind in {tyInt..tyInt64, tyUInt..tyUInt64}:
     case f.kind
@@ -413,13 +419,14 @@ proc isConvertibleToRange(f, a: PType): bool =
     of tyInt16: result = isIntLit(a) or a.kind in {tyInt8, tyInt16}
     of tyInt32: result = isIntLit(a) or a.kind in {tyInt8, tyInt16, tyInt32}
     # This is wrong, but seems like there's a lot of code that relies on it :(
-    of tyInt, tyUInt, tyUInt64: result = true
+    of tyInt, tyUInt: result = true
+    # of tyInt: result = isIntLit(a) or a.kind in {tyInt8 .. c.config.targetSizeSignedToKind}
     of tyInt64: result = isIntLit(a) or a.kind in {tyInt8, tyInt16, tyInt32, tyInt, tyInt64}
     of tyUInt8: result = isIntLit(a) or a.kind in {tyUInt8}
     of tyUInt16: result = isIntLit(a) or a.kind in {tyUInt8, tyUInt16}
     of tyUInt32: result = isIntLit(a) or a.kind in {tyUInt8, tyUInt16, tyUInt32}
-    #of tyUInt: result = isIntLit(a) or a.kind in {tyUInt8, tyUInt16, tyUInt32, tyUInt}
-    #of tyUInt64: result = isIntLit(a) or a.kind in {tyUInt8, tyUInt16, tyUInt32, tyUInt, tyUInt64}
+    # of tyUInt: result = isIntLit(a) or a.kind in {tyUInt8 .. c.config.targetSizeUnsignedToKind}
+    of tyUInt64: result = isIntLit(a) or a.kind in {tyUInt8, tyUInt16, tyUInt32, tyUInt64}
     else: result = false
   elif f.kind in {tyFloat..tyFloat128}:
     # `isIntLit` is correct and should be used above as well, see PR:
@@ -1148,7 +1155,7 @@ proc typeRel(c: var TCandidate, f, aOrig: PType,
       let f = skipTypes(f, {tyRange})
       if f.kind == a.kind and (f.kind != tyEnum or sameEnumTypes(f, a)):
         result = isIntConv
-      elif isConvertibleToRange(f, a):
+      elif isConvertibleToRange(c.c, f, a):
         result = isConvertible  # a convertible to f
   of tyInt:      result = handleRange(c.c, f, a, tyInt8, c.c.config.targetSizeSignedToKind)
   of tyInt8:     result = handleRange(c.c, f, a, tyInt8, tyInt8)

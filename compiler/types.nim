@@ -816,6 +816,15 @@ proc targetSizeUnsignedToKind*(conf: ConfigRef): TTypeKind =
   of 2: result = tyUInt16
   else: discard
 
+proc normalizeKind*(conf: ConfigRef, k: TTypeKind): TTypeKind =
+  case k
+  of tyInt:
+    result = conf.targetSizeSignedToKind()
+  of tyUInt:
+    result = conf.targetSizeUnsignedToKind()
+  else:
+    result = k
+
 proc lastOrd*(conf: ConfigRef; t: PType): Int128 =
   case t.kind
   of tyBool: result = toInt128(1'u)
