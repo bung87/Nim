@@ -300,7 +300,7 @@ proc printDecimalDigitsBackwards[T: Ordinal](buf: var openArray[char]; pos: T; o
     buf[pos] = chr(uint32('0') + q)
   return tz
 
-proc decimalLength(v: uint32): int32 {.inline.} =
+proc decimalLength(v: uint32): int {.inline.} =
   sf_Assert(v >= 1)
   sf_Assert(v <= 999999999'u)
   if v >= 100000000'u:
@@ -321,20 +321,20 @@ proc decimalLength(v: uint32): int32 {.inline.} =
     return 2
   return 1
 
-proc formatDigits[T: Ordinal](buffer: var openArray[char]; pos: T; digits: uint32; decimalExponent: int32;
-                  forceTrailingDotZero: bool = false): int32 {.inline.} =
+proc formatDigits[T: Ordinal](buffer: var openArray[char]; pos: T; digits: uint32; decimalExponent: int;
+                  forceTrailingDotZero: bool = false): int {.inline.} =
   const
     minFixedDecimalPoint: int32 = -4
     maxFixedDecimalPoint: int32 = 9
-  var pos:int32 = pos.int32
+  var pos = pos
   assert(minFixedDecimalPoint <= -1, "internal error")
   assert(maxFixedDecimalPoint >= 1, "internal error")
   sf_Assert(digits >= 1)
   sf_Assert(digits <= 999999999'u)
   sf_Assert(decimalExponent >= -99)
   sf_Assert(decimalExponent <= 99)
-  var numDigits: int32 = decimalLength(digits)
-  let decimalPoint: int32 = numDigits + decimalExponent
+  var numDigits = decimalLength(digits)
+  let decimalPoint = numDigits + decimalExponent
   let useFixed: bool = minFixedDecimalPoint <= decimalPoint and
       decimalPoint <= maxFixedDecimalPoint
   ##  Prepare the buffer.
@@ -342,7 +342,7 @@ proc formatDigits[T: Ordinal](buffer: var openArray[char]; pos: T; digits: uint3
   for i in 0..<32: buffer[pos+i] = '0'
   assert(minFixedDecimalPoint >= -30, "internal error")
   assert(maxFixedDecimalPoint <= 32, "internal error")
-  var decimalDigitsPosition: int32
+  var decimalDigitsPosition: int
   if useFixed:
     if decimalPoint <= 0:
       ##  0.[000]digits
@@ -386,7 +386,7 @@ proc formatDigits[T: Ordinal](buffer: var openArray[char]; pos: T; digits: uint3
       ##  d.igitsE+123
       buffer[pos+1] = '.'
       pos = digitsEnd
-    let scientificExponent: int32 = decimalPoint - 1
+    let scientificExponent = decimalPoint - 1
     ##       SF_ASSERT(scientific_exponent != 0);
     buffer[pos] = 'e'
     buffer[pos+1] = if scientificExponent < 0: '-' else: '+'
@@ -400,11 +400,11 @@ proc formatDigits[T: Ordinal](buffer: var openArray[char]; pos: T; digits: uint3
       inc(pos, 2)
   return pos
 
-proc float32ToChars*(buffer: var openArray[char]; v: float32; forceTrailingDotZero = false): int32 {.
+proc float32ToChars*(buffer: var openArray[char]; v: float32; forceTrailingDotZero = false): int {.
     inline.} =
   let significand: uint32 = physicalSignificand(constructSingle(v))
   let exponent: uint32 = physicalExponent(constructSingle(v))
-  var pos:int32 = 0
+  var pos = 0
   if exponent != maxIeeeExponent:
     ##  Finite
     buffer[pos] = '-'
