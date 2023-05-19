@@ -315,6 +315,7 @@ type
     sfVirtual         # proc is a C++ virtual function
     sfByCopy          # param is marked as pass bycopy
     sfCodegenDecl     # type, proc, global or proc param is marked as codegenDecl
+    sfSizeOf
 
   TSymFlags* = set[TSymFlag]
 
