@@ -340,14 +340,22 @@ proc genAssignment(p: BProc, dest, src: TLoc, flags: TAssignmentFlags) =
       genRefAssign(p, dest, src)
     else:
       if (dest.storage == OnStack and p.config.selectedGC != gcGo) or not usesWriteBarrier(p.config):
+        echo src.lode.typ.kind
         linefmt(p, cpsStmts, "$1 = #copyString($2);$n", [dest.rdLoc, src.rdLoc])
       elif dest.storage == OnHeap:
-        # we use a temporary to care for the dreaded self assignment:
-        var tmp: TLoc
-        getTemp(p, ty, tmp)
-        linefmt(p, cpsStmts, "$3 = $1; $1 = #copyStringRC1($2);$n",
-                [dest.rdLoc, src.rdLoc, tmp.rdLoc])
-        linefmt(p, cpsStmts, "if ($1) #nimGCunrefNoCycle($1);$n", [tmp.rdLoc])
+        if dest.lode.typ.kind == tySink and explicitlyMove in flags:
+          linefmt(p, cpsStmts, "$1 = #copyStringRC1($2);$n",
+                  [dest.rdLoc, src.rdLoc])
+          # linefmt(p, cpsStmts, "if ($1) #nimGCunrefNoCycle($1);$n", [src.rdLoc])
+        elif src.lode.typ.kind == tySink and src.k == locParam:
+          linefmt(p, cpsStmts, "$1 = $2;$n", [dest.rdLoc, src.rdLoc])
+        else:
+          # we use a temporary to care for the dreaded self assignment:
+          var tmp: TLoc
+          getTemp(p, ty, tmp)
+          linefmt(p, cpsStmts, "$3 = $1; $1 = #copyStringRC1($2);$n",
+                  [dest.rdLoc, src.rdLoc, tmp.rdLoc])
+          linefmt(p, cpsStmts, "if ($1) #nimGCunrefNoCycle($1);$n", [tmp.rdLoc])
       else:
         linefmt(p, cpsStmts, "#unsureAsgnRef((void**) $1, #copyString($2));$n",
                [addrLoc(p.config, dest), rdLoc(src)])

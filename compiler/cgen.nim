@@ -401,6 +401,7 @@ proc rdCharLoc(a: TLoc): Rope =
 type
   TAssignmentFlag = enum
     needToCopy
+    explicitlyMove
   TAssignmentFlags = set[TAssignmentFlag]
 
 proc genObjConstr(p: BProc, e: PNode, d: var TLoc)
