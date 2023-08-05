@@ -93,7 +93,9 @@ when defined(cpp) or defined(nimdoc):
 
     AtomicFlag* {.importcpp: "std::atomic_flag", size: 1.} = object
       ## An atomic boolean state.
-
+  proc atomic*[T](a: T): Atomic[T] {.importcpp: "atomic<'0>(@)", constructor.}
+  proc atomic*[T](): Atomic[T] {.importcpp: "atomic<'0>()", constructor.}
+  proc `=copy`[T](dest: var Atomic[T]; source: Atomic[T]) {.error.}
   # Access operations
 
   proc load*[T](location: var Atomic[T]; order: MemoryOrder = moSequentiallyConsistent): T {.importcpp: "#.load(@)".}
