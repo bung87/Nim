@@ -1292,6 +1292,7 @@ proc genTryGoto(p: BProc; t: PNode; d: var TLoc) =
       # we handled the exception, remember this:
       linefmt(p, cpsStmts, "*nimErr_ = NIM_FALSE;$n", [])
       expr(p, t[i][0], d)
+      linefmt(p, cpsStmts, "#popCurrentException();$n", [])
     else:
       var orExpr = newRopeAppender()
       for j in 0..<t[i].len - 1:
@@ -1311,13 +1312,14 @@ proc genTryGoto(p: BProc; t: PNode; d: var TLoc) =
       # we handled the exception, remember this:
       linefmt(p, cpsStmts, "*nimErr_ = NIM_FALSE;$n", [])
       expr(p, t[i][^1], d)
+      linefmt(p, cpsStmts, "#popCurrentException();$n", [])
 
-    linefmt(p, cpsStmts, "#popCurrentException();$n", [])
     linefmt(p, cpsStmts, "LA$1_:;$n", [nextExcept])
     endBlock(p)
 
     inc(i)
   discard pop(p.nestedTryStmts)
+  
   endBlock(p)
 
   if i < t.len and t[i].kind == nkFinally:
@@ -1338,8 +1340,10 @@ proc genTryGoto(p: BProc; t: PNode; d: var TLoc) =
       # 3. finally is run for exception handling code without any 'except'
       #    handler present or only handlers that did not match.
       linefmt(p, cpsStmts, "*nimErr_ = oldNimErrFin$1_;$n", [lab])
+    
     endBlock(p)
   raiseExit(p)
+  linefmt(p, cpsStmts, "*nimErr_ = NIM_FALSE;$n", [])
   if hasExcept: inc p.withinTryWithExcept
 
 proc genTrySetjmp(p: BProc, t: PNode, d: var TLoc) =
