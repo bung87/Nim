@@ -417,13 +417,16 @@ Consider:
 
 """
 
-proc containsCallKinds(n: PNode): bool =
+proc containsCallKinds(cache: IdentCache; n: PNode): bool =
   result = false
-  if n.isCallExpr:
-    return true
+  if n.isCallExpr and n[0].kind != nkOpenSymChoice:
+    if n[0].kind == nkSym and n[0].sym.name != getIdent(cache, "typeof"):
+      return true
+    elif n[0].kind == nkIdent and n[0].ident != getIdent(cache, "typeof"):
+      return true
   if n.safeLen > 0:
     for nn in n:
-      if containsCallKinds(nn):
+      if containsCallKinds(cache, nn):
         return true
 
 proc addClosureParam(c: var DetectionPass; fn: PSym; info: TLineInfo) =
@@ -526,7 +529,7 @@ proc detectCapturedVars(n: PNode; owner: PSym; c: var DetectionPass) =
   of nkReturnStmt:
     detectCapturedVars(n[0], owner, c)
   of nkIdentDefs:
-    if not containsCallKinds(n[1]):
+    if not containsCallKinds(c.graph.cache, n[1]):
       detectCapturedVars(n[^1], owner, c)
     else:
       for i in 0..<n.len:
@@ -540,6 +543,7 @@ type
     processed: IntSet
     envVars: Table[int, PNode]
     inContainer: int
+    inTypeOf: int
     unownedEnvVars: Table[int, PNode] # only required for --newruntime
 
 proc initLiftingPass(fn: PSym): LiftingPass =
@@ -813,6 +817,11 @@ proc liftCapturedVars(n: PNode; owner: PSym; d: var DetectionPass;
   of nkTypeOfExpr:
     result = n
   else:
+    if n.isCallExpr and n[0].kind != nkOpenSymChoice:
+      if n[0].kind == nkSym and n[0].sym.name == getIdent(d.graph.cache, "typeof"):
+        inc c.inTypeOf
+      elif n[0].kind == nkIdent and n[0].ident == getIdent(d.graph.cache, "typeof"):
+        inc c.inTypeOf
     if owner.isIterator:
       if nfLL in n.flags:
         # special case 'when nimVm' due to bug #3636:
@@ -824,6 +833,7 @@ proc liftCapturedVars(n: PNode; owner: PSym; d: var DetectionPass;
     for i in 0..<n.len:
       n[i] = liftCapturedVars(n[i], owner, d, c)
     if inContainer: dec c.inContainer
+    if c.inTypeOf > 0: dec c.inTypeOf
 
 # ------------------ old stuff -------------------------------------------
 
